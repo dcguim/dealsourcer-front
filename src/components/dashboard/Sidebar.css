@@ -1,0 +1,137 @@
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #3b3992;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s ease;
+    overflow-x: hidden;
+    z-index: 1000;
+}
+
+.sidebar.open {
+    width: 250px;
+}
+
+.sidebar.closed {
+    width: 60px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    white-space: nowrap;
+}
+
+.toggle-btn {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.toggle-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 20px 0;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.2s;
+}
+
+.sidebar-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-item.active {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-left: 4px solid white;
+}
+
+.sidebar-icon {
+    margin-right: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-text {
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-text.visible {
+    opacity: 1;
+}
+
+.sidebar-text.hidden {
+    opacity: 0;
+}
+
+.sidebar-footer {
+    padding: 15px 20px;
+    font-size: 0.8rem;
+    text-align: center;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-footer.hidden, 
+.sidebar-header h2.hidden {
+    opacity: 0;
+    display: none;
+}
+
+.sidebar-footer.visible, 
+.sidebar-header h2.visible {
+    opacity: 1;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+        width: 250px;
+    }
+    
+    .sidebar.closed {
+        transform: translateX(-100%);
+    }
+} 

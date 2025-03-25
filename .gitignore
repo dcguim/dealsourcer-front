@@ -13,11 +13,59 @@
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
+.env.test
+.env.production
 
+# logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+nohup.out
+
+# IDE/Editor specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime*
+.project
+
+# Optional npm cache and lint directories
+.npm/
+.eslintcache
+.stylelintcache
+
+# debug
+.chrome/
+debug.log
+
+# Local Netlify folder
+.netlify
+
+# Local dev files
+debug/
+.vercel
+.next/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+.~lock.*
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

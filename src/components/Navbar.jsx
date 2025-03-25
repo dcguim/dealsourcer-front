@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Navbar = () => {
   const scrollToCalendar = () => {
@@ -19,12 +20,20 @@ const Navbar = () => {
           <a href="#benefits" className="text-gray-600 hover:text-gray-900 font-medium">Benefits</a>
           <a href="#how-it-works" className="text-gray-600 hover:text-gray-900 font-medium">How It Works</a>
         </div>
-        <button 
-          onClick={scrollToCalendar}
-          className="bg-[#3b3992] hover:bg-[#3b3992]/80 text-white px-6 py-2 rounded-md font-medium transition-colors"
-        >
-          Request Demo
-        </button>
+        <div className="flex space-x-4">
+          <Link 
+            to="/signin"
+            className="text-[#3b3992] hover:text-[#3b3992]/80 border border-[#3b3992] px-6 py-2 rounded-md font-medium transition-colors"
+          >
+            Sign In
+          </Link>
+          <Link 
+            to="/signup"
+            className="bg-[#3b3992] hover:bg-[#3b3992]/80 text-white px-6 py-2 rounded-md font-medium transition-colors"
+          >
+            Sign Up
+          </Link>
+        </div>
       </div>
     </nav>
   );

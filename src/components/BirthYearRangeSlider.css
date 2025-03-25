@@ -1,0 +1,434 @@
+.birth-year-range-slider {
+    width: 100%;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    user-select: none;
+    transition: all 0.3s ease;
+}
+
+/* Disabled slider container - ensure high specificity */
+.birth-year-range-slider.slider-disabled {
+    background-color: #f2f2f2 !important;
+    border: 1px solid #ddd !important;
+    position: relative !important;
+    transition: all 0.3s ease;
+}
+
+.birth-year-range-slider.slider-disabled::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(240, 240, 240, 0.3);
+    pointer-events: none;
+    z-index: 4;
+    border-radius: 8px;
+}
+
+/* Disabled slider styles */
+.birth-year-range-slider.slider-disabled .slider-background-track {
+    background-color: #d8d8d8 !important;
+    transition: background-color 0.3s ease;
+}
+
+.birth-year-range-slider.slider-disabled .slider-range-highlight {
+    background-color: rgba(150, 150, 150, 0.2) !important;
+    transition: background-color 0.3s ease;
+}
+
+/* Immediate transitions for thumbs */
+.birth-year-range-slider.slider-disabled .boundary-slider::-webkit-slider-thumb {
+    background: #9e9e9e !important; /* Darker gray */
+    border: 3px solid #d8d8d8 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(100%) !important;
+    transform: scale(0.95) !important; /* Slightly smaller to indicate disabled state */
+    transition: all 0.3s ease;
+}
+
+.birth-year-range-slider.slider-disabled .boundary-slider::-moz-range-thumb {
+    background: #9e9e9e !important; /* Darker gray */
+    border: 3px solid #d8d8d8 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1) !important;
+    opacity: 0.7 !important;
+    cursor: not-allowed !important;
+    filter: grayscale(100%) !important;
+    transform: scale(0.95) !important; /* Slightly smaller to indicate disabled state */
+    transition: all 0.3s ease;
+}
+
+/* Range display in disabled state */
+.birth-year-range-slider.slider-disabled .range-value {
+    color: #909090 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    background-color: #f0f0f0 !important;
+    transition: all 0.3s ease;
+}
+
+/* Disabled state for year tickers */
+.birth-year-range-slider.slider-disabled .tick-line {
+    background-color: #ccc !important;
+    transition: background-color 0.3s ease;
+}
+
+.birth-year-range-slider.slider-disabled .tick-label {
+    color: #999 !important;
+    transition: color 0.3s ease;
+}
+
+.range-display {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.range-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #3b3992;
+    background-color: white;
+    padding: 6px 15px;
+    border-radius: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+/* Slider container */
+.slider-container {
+    position: relative;
+    padding: 0;
+    margin: 0;
+}
+
+.slider-track {
+    position: relative;
+    height: 40px;
+    margin: 0;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+
+/* Background track */
+.slider-background-track {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background-color: #e0e0e0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 3px;
+    pointer-events: none;
+    transition: background-color 0.3s ease;
+}
+
+/* Range highlight */
+.slider-range-highlight {
+    position: absolute;
+    height: 6px;
+    background-color: rgba(59, 57, 146, 0.3);
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 3px;
+    z-index: 1;
+    transition: left 0.2s, width 0.2s, background-color 0.3s ease;
+    pointer-events: none;
+}
+
+/* Sliders base styling */
+.boundary-slider {
+    -webkit-appearance: none;
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    outline: none;
+    margin: 0;
+    cursor: pointer;
+    z-index: 2;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Slider thumbs */
+.boundary-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b3992;
+    cursor: ew-resize;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+    z-index: 3;
+    position: relative;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.boundary-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b3992;
+    cursor: ew-resize;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+    z-index: 3;
+    position: relative;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+/* Toggle button container */
+.toggle-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Toggle button enhancements */
+.toggle-button {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: all 0.3s ease !important;
+    cursor: pointer;
+    border: none;
+    outline: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Button text specific styling */
+.button-text {
+    display: block;
+    position: relative;
+    transition: transform 0.3s;
+    animation-fill-mode: forwards;
+}
+
+/* Handle the text transitions with specific animations */
+.toggle-button.active .button-text {
+    animation: fadeInUp 0.3s forwards;
+}
+
+.toggle-button.inactive .button-text {
+    animation: fadeInDown 0.3s forwards;
+}
+
+@keyframes fadeInUp {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Adding a nice hover effect */
+.toggle-button:hover .button-text {
+    transform: translateY(-1px);
+}
+
+.toggle-button:focus {
+    outline: none;
+}
+
+.toggle-button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    filter: brightness(1.05) !important;
+}
+
+.toggle-button:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.toggle-button.active {
+    background-color: #3b3992 !important;
+    color: white !important;
+}
+
+.toggle-button.inactive {
+    background-color: #9e9e9e !important;
+    color: white !important;
+}
+
+/* Animation when deactivating */
+.deactivating::-webkit-slider-thumb {
+    animation: fadeToGray 0.5s ease forwards !important;
+}
+
+.deactivating::-moz-range-thumb {
+    animation: fadeToGray 0.5s ease forwards !important;
+}
+
+@keyframes fadeToGray {
+    0% {
+        background-color: #3b3992;
+        border-color: #fff;
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        background-color: #9e9e9e;
+        border-color: #d8d8d8;
+        transform: scale(0.95);
+        opacity: 0.7;
+        filter: grayscale(100%);
+    }
+}
+
+/* Year tickers section */
+.year-tickers {
+    display: flex;
+    position: relative;
+    height: 20px;
+    margin: 0;
+    padding-top: 5px;
+}
+
+.year-tick {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    font-size: 10px;
+}
+
+.tick-line {
+    height: 5px;
+    width: 1px;
+    background-color: #ccc;
+    margin-bottom: 2px;
+}
+
+.tick-label {
+    font-size: 10px;
+    color: #777;
+    white-space: nowrap;
+}
+
+/* Hide default track */
+.boundary-slider::-webkit-slider-runnable-track {
+    background: transparent;
+    height: 6px;
+    pointer-events: none;
+}
+
+.boundary-slider::-moz-range-track {
+    background: transparent;
+    height: 6px;
+    pointer-events: none;
+}
+
+/* Active state */
+.boundary-slider::-webkit-slider-thumb:active {
+    background: #322f7b;
+    transform: scale(1.1);
+}
+
+.boundary-slider::-moz-range-thumb:active {
+    background: #322f7b;
+    transform: scale(1.1);
+}
+
+/* Extra touch support for mobile devices */
+@supports (-webkit-touch-callout: none) {
+    .boundary-slider::-webkit-slider-thumb {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .year-tick:nth-child(odd) .tick-label {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .year-tick .tick-label {
+        display: none;
+    }
+    
+    /* Only show specific years for 10-year increments */
+    .year-tick:nth-child(1) .tick-label,  /* 1900 */
+    .year-tick:nth-child(3) .tick-label,  /* 1920 */
+    .year-tick:nth-child(6) .tick-label,  /* 1950 */
+    .year-tick:nth-child(9) .tick-label,  /* 1980 */
+    .year-tick:nth-child(13) .tick-label  /* 2020 */
+    {
+        display: block;
+    }
+    
+    .birth-year-range-slider {
+        padding: 15px 10px;
+    }
+    
+    .slider-container {
+        padding: 15px 5px 25px;
+    }
+    
+    .toggle-button {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+}
+
+/* Add attention-grabbing pulse effect */
+.pulse-ring {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 20px;
+    animation: pulse 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 57, 146, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(59, 57, 146, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 57, 146, 0);
+    }
+}
+
+/* Debugging helper */
+body.toggle-clicked .toggle-button {
+    outline: 2px solid red !important;
+} 

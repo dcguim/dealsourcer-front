@@ -1,0 +1,31 @@
+.dashboard {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #f5f7fa;
+}
+
+.dashboard-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    transition: margin-left 0.3s ease;
+}
+
+.dashboard-content.sidebar-open {
+    margin-left: 250px;
+}
+
+.dashboard-content.sidebar-closed {
+    margin-left: 60px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-content.sidebar-open {
+        margin-left: 0;
+    }
+    
+    .dashboard-content.sidebar-closed {
+        margin-left: 0;
+    }
+} 
