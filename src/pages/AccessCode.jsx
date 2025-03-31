@@ -1,269 +1,372 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { API_URL } from '../App';
-import './Auth.css';
+import axios from 'axios';
+import { API_URL } from '../utils/constants';
 
-const AccessCode = () => {
-    const [accessCode, setAccessCode] = useState('');
-    const [email, setEmail] = useState('');
-    const [mode, setMode] = useState('signup'); // Default to signup mode
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [countdown, setCountdown] = useState(null);
-    const navigate = useNavigate();
-    const location = useLocation();
+// Configure axios defaults
+axios.defaults.headers.post['Content-Type'] = 'application/json';
+axios.defaults.headers.post['Accept'] = 'application/json';
 
-    useEffect(() => {
-        // Extract email and mode from query parameters
-        const params = new URLSearchParams(location.search);
-        const emailParam = params.get('email');
-        const modeParam = params.get('mode');
-        
-        if (emailParam) {
-            setEmail(emailParam);
-            console.log(`Email set from URL: ${emailParam}`);
+const AccessCode = ({ setIsAuthenticated }) => {
+  const [accessCode, setAccessCode] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [countdown, setCountdown] = useState(300); // 5 minutes
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Get information from location state or session storage
+  const locationState = location.state || {};
+  const pendingAuth = JSON.parse(sessionStorage.getItem('pendingAuth') || '{}');
+  
+  const email = locationState.email || pendingAuth.email || '';
+  const source = locationState.source || pendingAuth.source || 'signin'; // Default to signin
+  // Get setAuthCallback if it exists in location state
+  const setAuthCallback = locationState.setAuthCallback;
+  
+  useEffect(() => {
+    // If no email is provided, redirect back to sign in
+    if (!email) {
+      navigate('/signin');
+      return;
+    }
+    
+    // Set up countdown timer
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
         }
-        
-        if (modeParam) {
-            setMode(modeParam);
-            console.log(`Mode set from URL: ${modeParam}`);
-        }
-    }, [location]);
-
-    useEffect(() => {
-        // Create a countdown for code expiration (5 minutes)
-        if (email) {
-            setCountdown(5 * 60); // 5 minutes in seconds
-        }
-    }, [email]);
-
-    useEffect(() => {
-        // Handle countdown timer
-        if (countdown === null) return;
-        
-        const timer = setInterval(() => {
-            setCountdown(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-        
-        return () => clearInterval(timer);
-    }, [countdown]);
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        return prev - 1;
+      });
+    }, 1000);
+    
+    // Store state in session storage in case of page refresh
+    if (locationState.email && locationState.source) {
+      sessionStorage.setItem('pendingAuth', JSON.stringify({
+        email: locationState.email,
+        source: locationState.source
+      }));
+    }
+    
+    return () => clearInterval(timer);
+  }, [email, navigate, locationState]);
+  
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    
+    // Trim any whitespace from the access code
+    const cleanedCode = accessCode.trim();
+    
+    // Basic validation
+    if (!cleanedCode) {
+      setError('Please enter the access code sent to your email');
+      setIsLoading(false);
+      return;
+    }
+    
+    if (!email) {
+      setError('Email information is missing. Please go back and try again.');
+      setIsLoading(false);
+      return;
+    }
+    
+    // Prepare payload with API's expected format
+    const payload = {
+      email: email.trim().toLowerCase(),
+      access_code: cleanedCode
     };
 
-    const handleAccessCodeSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-
-        // Make sure the access code is properly formatted (remove any spaces, etc.)
-        const cleanedCode = accessCode.trim();
-        
-        // Detailed request log
-        const requestData = { 
-            email: email,
-            access_code: cleanedCode
-        };
-        
-        console.log(`Verifying code with API endpoint: ${API_URL}/api/verify-code`);
-        console.log('Request data:', requestData);
-
+    // Simple, direct request
+    try {
+      console.log('Sending POST to:', `${API_URL}/api/login`);
+      console.log('With payload:', payload);
+      
+      const response = await fetch(`${API_URL}/api/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      console.log('Response:', data);
+      handleSuccessfulLogin(data, email);
+    } catch (error) {
+      console.error('Error:', error);
+      handleLoginError(error);
+      setIsLoading(false);
+    }
+  };
+  
+  // Helper function to handle successful login
+  const handleSuccessfulLogin = (data, userEmail) => {
+    console.log('Login successful, processing response:', JSON.stringify(data));
+    
+    try {
+      // Handle different response formats
+      // Some APIs return token directly, others nest it under a 'token' field
+      const token = data.access_token || 
+                   (data.token && data.token.access_token) || 
+                   data.token || 
+                   null;
+      
+      console.log('Extracted token:', token ? `${token.substring(0, 15)}...` : 'No token found');
+      console.log('Token type:', typeof token);
+      console.log('Token length:', token ? token.length : 0);
+      
+      // Get user data depending on API format
+      const userData = data.user || 
+                      (data.token && data.token.user) || 
+                      { email: userEmail };
+      
+      if (!token) {
+        setError('Login successful but no token received. Please try again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Clear any previous tokens to avoid conflicts
+      localStorage.removeItem('authToken');
+      
+      // Wait a moment to ensure localStorage is clear
+      setTimeout(() => {
+        // Store the token in localStorage with error handling
         try {
-            // Configure axios with proper headers
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+          localStorage.setItem('authToken', token);
+          console.log('Token stored in localStorage successfully');
+          
+          // Verify token was stored correctly
+          const storedToken = localStorage.getItem('authToken');
+          console.log('Verified stored token:', storedToken ? `${storedToken.substring(0, 15)}...` : 'No token found');
+          console.log('Token storage verification:', token === storedToken ? 'Successful' : 'Failed');
+          
+          if (!storedToken || token !== storedToken) {
+            throw new Error('Token storage verification failed');
+          }
+          
+          // Store email for reference
+          localStorage.setItem('userEmail', userEmail);
+          console.log('Email stored in localStorage:', userEmail);
+          
+          // Store user data
+          localStorage.setItem('user', JSON.stringify(userData));
+          console.log('User data stored in localStorage');
+          
+          // Set authorization header for future requests
+          axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          console.log('Authorization header set for axios');
+          
+          // Update the app's authentication state
+          if (setIsAuthenticated) {
+            setIsAuthenticated(true);
+            console.log('App authentication state updated to true');
+          } else {
+            console.warn('setIsAuthenticated function not available');
+          }
+          
+          // Dispatch auth state change event
+          window.dispatchEvent(new Event('auth-state-changed'));
+          console.log('auth-state-changed event dispatched');
+          
+          // Clean up any pending auth data
+          sessionStorage.removeItem('pendingAuth');
+          
+          // Show brief success message
+          setError('');
+          setIsLoading(false);
+          
+          // Log before navigation
+          console.log('IMPORTANT: Preparing navigation to dashboard with token', token ? 'present' : 'missing');
+          
+          // Better approach: Use a hybrid approach for reliability
+          setTimeout(() => {
+            // First try React Router navigation
+            try {
+              navigate('/dashboard', { replace: true });
+              console.log('React Router navigation executed');
+              
+              // Fallback: If we're still on this page after a delay, use direct navigation
+              setTimeout(() => {
+                if (window.location.pathname.includes('access-code')) {
+                  console.log('Still on access code page, trying direct navigation');
+                  window.location.href = '/dashboard';
                 }
-            };
-            
-            const response = await axios.post(
-                `${API_URL}/api/verify-code`, 
-                requestData,
-                config
-            );
-            
-            console.log('Verification response:', response);
-            console.log('Verification successful:', response.data);
-            
-            // Save the token if provided by the API
-            if (response.data && response.data.token) {
-                localStorage.setItem('authToken', response.data.token);
-                localStorage.setItem('userEmail', email);
-                console.log('Auth token saved in localStorage');
-            } else {
-                console.log('No token received from API');
-                // Still consider verification successful if API doesn't return a token
-                localStorage.setItem('userEmail', email);
-                console.log('User email saved in localStorage');
+              }, 500);
+            } catch (navError) {
+              console.error('Navigation error:', navError);
+              // Fallback to direct navigation
+              window.location.href = '/dashboard';
             }
-            
-            // Show success message
-            alert('Verification successful! Redirecting to homepage.');
-            
-            // Redirect to dashboard or home page after successful verification
-            navigate('/');
-        } catch (error) {
-            console.error('Error verifying access code:', error);
-            
-            // Detailed error logging
-            if (error.response) {
-                console.error('API error response:', {
-                    status: error.response.status,
-                    data: error.response.data,
-                    headers: error.response.headers
-                });
-                setError(
-                    error.response.data?.message || 
-                    `Error (${error.response.status}): ${error.response.statusText}`
-                );
-            } else if (error.request) {
-                console.error('No response received:', error.request);
-                setError('No response from server. Please check your internet connection and try again.');
-            } else {
-                console.error('Request setup error:', error.message);
-                setError(`Error: ${error.message}`);
-            }
-        } finally {
-            setLoading(false);
+          }, 500); // Small delay to ensure events are processed
+          
+        } catch (storageError) {
+          console.error('Error storing authentication data:', storageError);
+          setError('Error storing authentication data. Please try again.');
+          setIsLoading(false);
         }
-    };
-
-    const handleResendCode = async () => {
-        setLoading(true);
-        setError('');
-
-        const requestData = { email: email };
-        console.log(`Resending code to ${email} using API endpoint: ${API_URL}/api/signup`);
-        console.log('Request data:', requestData);
-
-        try {
-            // Configure axios with proper headers
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
-            };
-            
-            // Use the signup endpoint to resend the code
-            const response = await axios.post(
-                `${API_URL}/api/signup`, 
-                requestData,
-                config
-            );
-            
-            console.log('Resend code response:', response);
-            
-            // Reset countdown timer
-            setCountdown(5 * 60);
-            
-            // Show success message
-            alert('A new code has been sent to your email.');
-        } catch (error) {
-            console.error('Error resending code:', error);
-            
-            // Detailed error logging
-            if (error.response) {
-                console.error('API error response:', {
-                    status: error.response.status,
-                    data: error.response.data,
-                    headers: error.response.headers
-                });
-                setError(
-                    error.response.data?.message || 
-                    `Error (${error.response.status}): ${error.response.statusText}`
-                );
-            } else if (error.request) {
-                console.error('No response received:', error.request);
-                setError('No response from server. Please check your internet connection and try again.');
-            } else {
-                console.error('Request setup error:', error.message);
-                setError(`Error: ${error.message}`);
-            }
-        } finally {
-            setLoading(false);
-        }
-    };
-
+      }, 100);
+    } catch (error) {
+      console.error('Error in handleSuccessfulLogin:', error);
+      setError('Error processing login response. Please try again.');
+      setIsLoading(false);
+    }
+  };
+  
+  // Helper function to handle login errors
+  const handleLoginError = (error) => {
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      if (error.response.data && error.response.data.detail) {
+        setError(error.response.data.detail);
+      } else if (error.response.data && error.response.data.message) {
+        setError(error.response.data.message);
+      } else if (error.response.status === 401) {
+        setError('Invalid access code. Please check your email and try again.');
+      } else if (error.response.status === 422) {
+        setError('Invalid data format. Please check your email and code.');
+      } else if (error.response.status === 400) {
+        setError('Invalid or expired verification code. Please request a new code.');
+      } else {
+        setError(`Login failed (${error.response.status}). Please try again.`);
+      }
+    } else if (error.request) {
+      // The request was made but no response was received
+      setError('Server not responding. Please check your internet connection or try again later.');
+    } else {
+      // Something happened in setting up the request
+      setError('Error during login request. Please try again.');
+    }
+  };
+  
+  const handleResendCode = async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Get stored email
+      if (!email) {
+        setError('Email information missing. Please go back and try again.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Request a new code
+      await axios.post(`${API_URL}/api/request-login-code`, {
+        email
+      });
+      
+      // Reset countdown
+      setCountdown(300);
+      
+      // Reset access code field
+      setAccessCode('');
+      
+      // Show success message
+      alert('A new access code has been sent to your email.');
+    } catch (error) {
+      if (error.response && error.response.data) {
+        setError(`Failed to resend code: ${error.response.data.detail || error.response.data.message || 'Server error'}`);
+      } else {
+        setError('Failed to resend code. Please try again.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Security component to protect the dashboard
+  if (isLoading) {
     return (
-        <div className="auth-container">
-            <div className="auth-card">
-                <h2>Enter Access Code</h2>
-                <p className="auth-subtitle">
-                    We've sent a code to your email: <strong>{email}</strong>
-                </p>
-                
-                {countdown > 0 && (
-                    <p className="timer">Code expires in: {formatTime(countdown)}</p>
-                )}
-                
-                {countdown === 0 && (
-                    <p className="expired-message">
-                        Your code has expired. Please request a new one.
-                    </p>
-                )}
-                
-                {error && <div className="error-message">{error}</div>}
-                
-                <form onSubmit={handleAccessCodeSubmit} className="auth-form">
-                    <div className="form-group">
-                        <label htmlFor="accessCode">Access Code</label>
-                        <input 
-                            type="text" 
-                            id="accessCode"
-                            value={accessCode}
-                            onChange={(e) => setAccessCode(e.target.value)} 
-                            required 
-                            autoFocus
-                            disabled={loading || countdown === 0}
-                            placeholder="Enter the 6-digit code"
-                            maxLength={6}
-                        />
-                    </div>
-                    
-                    <button 
-                        type="submit" 
-                        className="auth-button"
-                        disabled={loading || countdown === 0}
-                    >
-                        {loading ? 'Verifying...' : 'Verify Access Code'}
-                    </button>
-                </form>
-                
-                <div className="debug-info" style={{ fontSize: '12px', color: '#666', marginTop: '20px', textAlign: 'left' }}>
-                    <details>
-                        <summary>Debug Information</summary>
-                        <p>API URL: {API_URL}</p>
-                        <p>Email: {email}</p>
-                        <p>Mode: {mode}</p>
-                        <p>Endpoint: {API_URL}/api/verify-code</p>
-                    </details>
-                </div>
-                
-                <p className="auth-footer">
-                    Didn't receive a code or code expired?{' '}
-                    <button 
-                        className="text-button" 
-                        onClick={handleResendCode}
-                        disabled={loading}
-                    >
-                        Resend Code
-                    </button>
-                </p>
-            </div>
+      <div className="flex h-screen bg-gray-100 items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#3b3992] mx-auto"></div>
+          <p className="mt-4 text-gray-700">Verifying authentication...</p>
         </div>
+      </div>
     );
+  }
+  
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <div className="m-auto w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">Access Code</h1>
+          <p className="mt-2 text-sm text-gray-600">
+            Enter the code sent to {email}
+          </p>
+        </div>
+        
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <div className="mt-1">
+              <input
+                id="accessCode"
+                name="accessCode"
+                type="text"
+                required
+                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#3b3992] focus:border-[#3b3992] sm:text-sm"
+                placeholder="Enter code"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading || countdown === 0}
+              className={`group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#3b3992] hover:bg-[#2e2c70] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3b3992] ${(isLoading || countdown === 0) ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? 'Verifying...' : 'Verify Code'}
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => navigate(source === 'signup' ? '/signup' : '/signin')}
+              className="text-sm font-medium text-[#3b3992] hover:text-[#2e2c70]"
+            >
+              Back to {source === 'signup' ? 'Sign Up' : 'Sign In'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handleResendCode}
+              disabled={isLoading || countdown > 270} // Can only resend after 30 seconds
+              className={`text-sm font-medium text-[#3b3992] hover:text-[#2e2c70] ${(isLoading || countdown > 270) ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              Resend Code
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 export default AccessCode;

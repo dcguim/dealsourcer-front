@@ -1,84 +1,97 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './BirthYearRangeSlider.css';
 
-const BirthYearRangeSlider = ({ onChange, initialMinYear = 1940, initialMaxYear = 2000 }) => {
+const BirthYearRangeSlider = ({ onChange, initialMinYear = 1950, initialMaxYear = 1970, disabled = false }) => {
     const [yearRange, setYearRange] = useState({
         minYear: initialMinYear,
         maxYear: initialMaxYear
     });
-    const [isActive, setIsActive] = useState(true);
     
-    // Skip all callbacks
+    const isActive = !disabled;
     const skipCallbacks = useRef(false);
-    
-    // Track if this is the first render
     const isFirstRender = useRef(true);
     
-    // Min/max year constants
     const minPossibleYear = 1900;
     const maxPossibleYear = 2020;
+    const MAX_YEAR_DIFFERENCE = 20;
     const rangeSpan = maxPossibleYear - minPossibleYear;
     
-    /**
-     * Only notify parent when year range sliders move - NEVER for toggle status
-     */
     useEffect(() => {
-        // Skip entirely on first render
         if (isFirstRender.current) {
             isFirstRender.current = false;
             return;
         }
         
-        // NEVER notify if we're skipping callbacks
         if (skipCallbacks.current) {
             return;
         }
         
-        // ONLY notify about slider movements - never about active state
         if (onChange) {
-            onChange(yearRange);
+            onChange({
+                minYear: yearRange.minYear,
+                maxYear: yearRange.maxYear,
+                isActive: isActive
+            });
         }
-    }, [yearRange, onChange]);
+    }, [yearRange, isActive, onChange]);
     
-    // Simplified year change handlers that do nothing when inactive
     const handleMinYearChange = (e) => {
         if (!isActive) return;
+        
         const newMinYear = parseInt(e.target.value, 10);
+        
         if (newMinYear <= yearRange.maxYear) {
-            setYearRange({ ...yearRange, minYear: newMinYear });
+            const currentRange = yearRange.maxYear - newMinYear;
+            
+            if (currentRange <= MAX_YEAR_DIFFERENCE) {
+                setYearRange(prev => ({ ...prev, minYear: newMinYear }));
+            } else {
+                const newMaxYear = newMinYear + MAX_YEAR_DIFFERENCE;
+                const adjustedMaxYear = Math.min(newMaxYear, maxPossibleYear);
+                setYearRange({
+                    minYear: newMinYear,
+                    maxYear: adjustedMaxYear
+                });
+            }
         }
     };
 
     const handleMaxYearChange = (e) => {
         if (!isActive) return;
+        
         const newMaxYear = parseInt(e.target.value, 10);
+        
         if (newMaxYear >= yearRange.minYear) {
-            setYearRange({ ...yearRange, maxYear: newMaxYear });
+            const currentRange = newMaxYear - yearRange.minYear;
+            
+            if (currentRange <= MAX_YEAR_DIFFERENCE) {
+                setYearRange(prev => ({ ...prev, maxYear: newMaxYear }));
+            } else {
+                const newMinYear = newMaxYear - MAX_YEAR_DIFFERENCE;
+                const adjustedMinYear = Math.max(newMinYear, minPossibleYear);
+                setYearRange({
+                    minYear: adjustedMinYear,
+                    maxYear: newMaxYear
+                });
+            }
         }
     };
 
-    // STANDALONE TOGGLE FUNCTION that does not use form elements
-    const standaloneToggle = (e) => {
-        // Prevent any possible form submission or event bubbling
+    const handleToggle = (e) => {
         if (e) {
             e.preventDefault();
             e.stopPropagation();
         }
         
-        // Block any notifications
-        skipCallbacks.current = true;
-        
-        // Toggle the visual state
-        setIsActive(!isActive);
-        
-        // Unblock after a delay
-        setTimeout(() => {
-            skipCallbacks.current = false;
-        }, 500);
+        if (onChange) {
+            onChange({
+                ...yearRange,
+                isActive: !isActive
+            });
+        }
     };
 
-    // Calculate range highlight for the slider
-    const getHighlightStyle = () => {
+    const getSliderStyle = () => {
         const minPercent = ((yearRange.minYear - minPossibleYear) / rangeSpan) * 100;
         const maxPercent = ((yearRange.maxYear - minPossibleYear) / rangeSpan) * 100;
         return {
@@ -87,10 +100,8 @@ const BirthYearRangeSlider = ({ onChange, initialMinYear = 1940, initialMaxYear 
         };
     };
 
-    // Generate year ticks with 10-year increments
     const generateYearTicks = () => {
         const ticks = [];
-        // Start at 1900 and go up by 10 years
         for (let year = minPossibleYear; year <= maxPossibleYear; year += 10) {
             const percent = ((year - minPossibleYear) / rangeSpan) * 100;
             ticks.push(
@@ -108,82 +119,45 @@ const BirthYearRangeSlider = ({ onChange, initialMinYear = 1940, initialMaxYear 
     };
 
     return (
-        <div className={isActive ? "birth-year-range-slider" : "birth-year-range-slider slider-disabled"} style={{ 
-            padding: '10px 12px', 
-            backgroundColor: 'white', 
-            borderRadius: '4px',
-            marginBottom: '10px'
-        }}>
-            <div className="slider-wrapper" style={{ width: '100%' }}>
-                {/* Range info and toggle button in one row */}
-                <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
-                    marginBottom: '12px'
-                }}>
-                    <span className="range-value" style={{ 
-                        fontWeight: '400', 
-                        color: '#666',
-                        fontSize: '13px',
-                        paddingLeft: '8px'
-                    }}>
-                        {yearRange.minYear} - {yearRange.maxYear}
-                    </span>
-                    <button
-                        type="button"
-                        onClick={standaloneToggle}
-                        className="btn btn-primary"
-                        style={{ 
-                            fontSize: '12px', 
-                            padding: '4px 8px',
-                            lineHeight: '1.2',
-                            marginRight: '8px'
-                        }}
-                    >
-                        {isActive ? "Disable" : "Enable"}
-                    </button>
+        <div className={`birth-year-range-slider ${!isActive ? 'slider-disabled' : ''}`}>
+            <div className="slider-header">
+                <button
+                    type="button"
+                    onClick={handleToggle}
+                    className="toggle-button"
+                >
+                    {isActive ? 'Disable' : 'Enable'}
+                </button>
+                <span className="range-value">
+                    {yearRange.minYear} - {yearRange.maxYear}
+                </span>
+            </div>
+            
+            <div className="slider-container">
+                <div className="slider-track">
+                    <div className="slider-background-track"></div>
+                    <div className="slider-range-highlight" style={getSliderStyle()}></div>
+                    <input
+                        type="range"
+                        min={minPossibleYear}
+                        max={maxPossibleYear}
+                        value={yearRange.minYear}
+                        onChange={handleMinYearChange}
+                        className="boundary-slider"
+                        disabled={!isActive}
+                    />
+                    <input
+                        type="range"
+                        min={minPossibleYear}
+                        max={maxPossibleYear}
+                        value={yearRange.maxYear}
+                        onChange={handleMaxYearChange}
+                        className="boundary-slider"
+                        disabled={!isActive}
+                    />
                 </div>
-                
-                <div className="slider-container" style={{ padding: '0 8px' }}>
-                    <div className="slider-track">
-                        {/* Background track */}
-                        <div className="slider-background-track"></div>
-                        
-                        {/* Range highlight */}
-                        <div 
-                            className="slider-range-highlight"
-                            style={getHighlightStyle()}
-                        ></div>
-                        
-                        {/* Sliders */}
-                        <input
-                            type="range"
-                            value={yearRange.minYear}
-                            onChange={handleMinYearChange}
-                            min={minPossibleYear}
-                            max={maxPossibleYear}
-                            disabled={!isActive}
-                            className="boundary-slider min-slider"
-                            aria-label="Minimum birth year"
-                        />
-                        
-                        <input
-                            type="range"
-                            value={yearRange.maxYear}
-                            onChange={handleMaxYearChange}
-                            min={minPossibleYear}
-                            max={maxPossibleYear}
-                            disabled={!isActive}
-                            className="boundary-slider max-slider"
-                            aria-label="Maximum birth year"
-                        />
-                    </div>
-                    
-                    {/* Year tickers with 10-year increments */}
-                    <div className="year-tickers" style={{ marginTop: '2px', paddingBottom: '5px' }}>
-                        {generateYearTicks()}
-                    </div>
+                <div className="year-ticks-container">
+                    {generateYearTicks()}
                 </div>
             </div>
         </div>

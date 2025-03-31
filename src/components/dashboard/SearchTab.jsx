@@ -295,13 +295,13 @@ const SearchTab = () => {
                         </div>
                         <div className="form-group">
                             <label htmlFor="description">Description</label>
-                            <textarea
+                            <input
+                                type="text"
                                 id="description"
                                 name="description"
                                 value={searchParams.description}
                                 onChange={handleInputChange}
                                 placeholder="Enter company description"
-                                rows="3"
                             />
                         </div>
                     </div>
@@ -321,9 +321,6 @@ const SearchTab = () => {
                                 ))}
                             </select>
                         </div>
-                    </div>
-
-                    <div className="form-row">
                         <div className="form-group">
                             <label htmlFor="participant_name">Participant Name</label>
                             <input

@@ -8,6 +8,176 @@
     transition: all 0.3s ease;
 }
 
+.slider-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.toggle-button {
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #666;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggle-button:hover {
+    background: #f0f0f0;
+}
+
+.range-value {
+    font-size: 14px;
+    color: #666;
+    margin-left: 10px;
+}
+
+.slider-container {
+    position: relative;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.slider-track {
+    position: relative;
+    height: 40px;
+    margin: 0;
+    pointer-events: none;
+}
+
+/* Background track */
+.slider-background-track {
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background-color: #e0e0e0;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 3px;
+    pointer-events: none;
+}
+
+/* Range highlight */
+.slider-range-highlight {
+    position: absolute;
+    height: 6px;
+    background-color: #3b3992;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Year ticks container */
+.year-ticks-container {
+    position: relative;
+    width: 100%;
+    height: 30px;
+    margin-top: 5px;
+}
+
+/* Year ticks */
+.year-tick {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+.tick-line {
+    width: 1px;
+    height: 8px;
+    background-color: #ccc;
+}
+
+.tick-label {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+/* Sliders */
+.boundary-slider {
+    -webkit-appearance: none;
+    position: absolute;
+    width: 100%;
+    height: 6px;
+    background: transparent;
+    outline: none;
+    margin: 0;
+    cursor: pointer;
+    z-index: 2;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Slider thumbs */
+.boundary-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b3992;
+    cursor: ew-resize;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+.boundary-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b3992;
+    cursor: ew-resize;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+/* Hide default track */
+.boundary-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+.boundary-slider::-moz-range-track {
+    height: 6px;
+    background: transparent;
+    border: none;
+}
+
+/* Disabled state */
+.slider-disabled .boundary-slider {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.slider-disabled .boundary-slider::-webkit-slider-thumb {
+    background: #999;
+    cursor: not-allowed;
+}
+
+.slider-disabled .boundary-slider::-moz-range-thumb {
+    background: #999;
+    cursor: not-allowed;
+}
+
+.slider-disabled .slider-range-highlight {
+    background: #999;
+}
+
 /* Disabled slider container - ensure high specificity */
 .birth-year-range-slider.slider-disabled {
     background-color: #f2f2f2 !important;
@@ -82,271 +252,42 @@
     transition: color 0.3s ease;
 }
 
-.range-display {
-    text-align: center;
-    margin-bottom: 15px;
-}
-
-.range-value {
-    font-size: 16px;
-    font-weight: 500;
-    color: #3b3992;
-    background-color: white;
-    padding: 6px 15px;
-    border-radius: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+/* Range display in disabled state */
+.birth-year-range-slider.slider-disabled .range-value {
+    color: #909090 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    background-color: #f0f0f0 !important;
     transition: all 0.3s ease;
 }
 
-/* Slider container */
-.slider-container {
-    position: relative;
-    padding: 0;
-    margin: 0;
-}
-
-.slider-track {
-    position: relative;
-    height: 40px;
-    margin: 0;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-}
-
-/* Background track */
-.slider-background-track {
-    position: absolute;
-    width: 100%;
-    height: 6px;
-    background-color: #e0e0e0;
-    top: 50%;
-    transform: translateY(-50%);
-    border-radius: 3px;
-    pointer-events: none;
+/* Disabled state for year tickers */
+.birth-year-range-slider.slider-disabled .tick-line {
+    background-color: #ccc !important;
     transition: background-color 0.3s ease;
 }
 
-/* Range highlight */
-.slider-range-highlight {
-    position: absolute;
-    height: 6px;
-    background-color: rgba(59, 57, 146, 0.3);
-    top: 50%;
-    transform: translateY(-50%);
-    border-radius: 3px;
-    z-index: 1;
-    transition: left 0.2s, width 0.2s, background-color 0.3s ease;
-    pointer-events: none;
+.birth-year-range-slider.slider-disabled .tick-label {
+    color: #999 !important;
+    transition: color 0.3s ease;
 }
 
-/* Sliders base styling */
-.boundary-slider {
-    -webkit-appearance: none;
-    position: absolute;
-    width: 100%;
-    height: 6px;
-    background: transparent;
-    outline: none;
-    margin: 0;
-    cursor: pointer;
-    z-index: 2;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-}
-
-/* Slider thumbs */
-.boundary-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #3b3992;
-    cursor: ew-resize;
-    border: 3px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    pointer-events: auto;
-    z-index: 3;
-    position: relative;
-    box-sizing: border-box;
+/* Range display in disabled state */
+.birth-year-range-slider.slider-disabled .range-value {
+    color: #909090 !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+    background-color: #f0f0f0 !important;
     transition: all 0.3s ease;
 }
 
-.boundary-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #3b3992;
-    cursor: ew-resize;
-    border: 3px solid #fff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    pointer-events: auto;
-    z-index: 3;
-    position: relative;
-    box-sizing: border-box;
-    transition: all 0.3s ease;
+/* Disabled state for year tickers */
+.birth-year-range-slider.slider-disabled .tick-line {
+    background-color: #ccc !important;
+    transition: background-color 0.3s ease;
 }
 
-/* Toggle button container */
-.toggle-container {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-}
-
-/* Toggle button enhancements */
-.toggle-button {
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s ease !important;
-    cursor: pointer;
-    border: none;
-    outline: none;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-    position: relative;
-    overflow: hidden;
-}
-
-/* Button text specific styling */
-.button-text {
-    display: block;
-    position: relative;
-    transition: transform 0.3s;
-    animation-fill-mode: forwards;
-}
-
-/* Handle the text transitions with specific animations */
-.toggle-button.active .button-text {
-    animation: fadeInUp 0.3s forwards;
-}
-
-.toggle-button.inactive .button-text {
-    animation: fadeInDown 0.3s forwards;
-}
-
-@keyframes fadeInUp {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInDown {
-    0% {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Adding a nice hover effect */
-.toggle-button:hover .button-text {
-    transform: translateY(-1px);
-}
-
-.toggle-button:focus {
-    outline: none;
-}
-
-.toggle-button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    filter: brightness(1.05) !important;
-}
-
-.toggle-button:active {
-    transform: translateY(0) !important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-.toggle-button.active {
-    background-color: #3b3992 !important;
-    color: white !important;
-}
-
-.toggle-button.inactive {
-    background-color: #9e9e9e !important;
-    color: white !important;
-}
-
-/* Animation when deactivating */
-.deactivating::-webkit-slider-thumb {
-    animation: fadeToGray 0.5s ease forwards !important;
-}
-
-.deactivating::-moz-range-thumb {
-    animation: fadeToGray 0.5s ease forwards !important;
-}
-
-@keyframes fadeToGray {
-    0% {
-        background-color: #3b3992;
-        border-color: #fff;
-        transform: scale(1);
-        opacity: 1;
-    }
-    100% {
-        background-color: #9e9e9e;
-        border-color: #d8d8d8;
-        transform: scale(0.95);
-        opacity: 0.7;
-        filter: grayscale(100%);
-    }
-}
-
-/* Year tickers section */
-.year-tickers {
-    display: flex;
-    position: relative;
-    height: 20px;
-    margin: 0;
-    padding-top: 5px;
-}
-
-.year-tick {
-    position: absolute;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transform: translateX(-50%);
-    font-size: 10px;
-}
-
-.tick-line {
-    height: 5px;
-    width: 1px;
-    background-color: #ccc;
-    margin-bottom: 2px;
-}
-
-.tick-label {
-    font-size: 10px;
-    color: #777;
-    white-space: nowrap;
-}
-
-/* Hide default track */
-.boundary-slider::-webkit-slider-runnable-track {
-    background: transparent;
-    height: 6px;
-    pointer-events: none;
-}
-
-.boundary-slider::-moz-range-track {
-    background: transparent;
-    height: 6px;
-    pointer-events: none;
+.birth-year-range-slider.slider-disabled .tick-label {
+    color: #999 !important;
+    transition: color 0.3s ease;
 }
 
 /* Active state */
@@ -376,7 +317,7 @@
 }
 
 @media (max-width: 768px) {
-    .year-tick .tick-label {
+    .year-tick:nth-child(odd) .tick-label {
         display: none;
     }
     

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { API_URL } from '../App';
+import { API_URL } from '../utils/constants';
 import './Auth.css';
 
 const SignUp = () => {
@@ -24,7 +24,7 @@ const SignUp = () => {
             email: email.trim(),
             first_name: firstName.trim(),
             last_name: lastName.trim(),
-            company_name: company.trim()
+            company: company.trim()
         };
         
         console.log('Attempting signup with data:', userData);
@@ -36,8 +36,19 @@ const SignUp = () => {
             console.log('Signup response:', response);
             console.log('Signup successful:', response.data);
             
+            // Store email for verification page
+            sessionStorage.setItem('pendingAuth', JSON.stringify({ 
+                email,
+                source: 'signup'
+            }));
+            
             // Redirect to the access code page
-            navigate(`/access-code?email=${encodeURIComponent(email)}&mode=signup`);
+            navigate('/access', { 
+                state: { 
+                    email,
+                    source: 'signup'
+                }
+            });
         } catch (error) {
             console.error('Error signing up:', error);
             
@@ -133,14 +144,6 @@ const SignUp = () => {
                         {loading ? 'Signing Up...' : 'Sign Up'}
                     </button>
                 </form>
-                
-                <div className="debug-info" style={{ fontSize: '12px', color: '#666', marginTop: '20px', textAlign: 'left' }}>
-                    <details>
-                        <summary>Debug Information</summary>
-                        <p>API URL: {API_URL}</p>
-                        <p>Endpoint: {API_URL}/api/signup</p>
-                    </details>
-                </div>
                 
                 <p className="auth-footer">
                     Already have an account? <a href="/signin">Sign In</a>
